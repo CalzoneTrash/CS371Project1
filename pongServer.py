@@ -1,13 +1,13 @@
 # =================================================================================================
-# Contributing Authors:	    <Anyone who touched the code>
-# Email Addresses:          <Your uky.edu email addresses>
-# Date:                     <The date the file was last edited>
-# Purpose:                  <How this file contributes to the project>
+# Contributing Authors:	    Jacob Alteri, Knox Garland
+# Email Addresses:          jcal240@uky.edu, 
+# Date:                     11/01/2023
+# Purpose:                  Server Code
 # Misc:                     <Not Required.  Anything else you might want to include>
 # =================================================================================================
-
 import socket
 import threading
+from assets.code.helperCode import *
 
 # Use this file to write your server logic
 # You will need to support at least two clients
@@ -15,3 +15,4 @@ import threading
 # for each player and where the ball is, and relay that to each client
 # I suggest you use the sync variable in pongClient.py to determine how out of sync your two
 # clients are and take actions to resync the games
+

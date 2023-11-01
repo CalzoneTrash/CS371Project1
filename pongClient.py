@@ -1,8 +1,8 @@
 # =================================================================================================
-# Contributing Authors:	    <Anyone who touched the code>
-# Email Addresses:          <Your uky.edu email addresses>
-# Date:                     <The date the file was last edited>
-# Purpose:                  <How this file contributes to the project>
+# Contributing Authors:	    Jacob Alteri, Knox Garland
+# Email Addresses:          jcal240@uky.edu, 
+# Date:                     11/01/2023
+# Purpose:                  Main Game Loop for Clients
 # Misc:                     <Not Required.  Anything else you might want to include>
 # =================================================================================================
 
