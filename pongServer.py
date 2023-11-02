@@ -19,11 +19,6 @@ from typing import Dict, Tuple
 
 
 # Global variables
-ball = Ball(None, -5, 0)  # Starting ball velocity is to the left
-leftPaddle = Paddle(None)
-rightPaddle = Paddle(None)
-lScore = 0
-rScore = 0
 
 clients: Dict[Tuple[str, int], socket.socket] = {}  # Dictionary to hold client sockets
 
@@ -51,7 +46,7 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
         
         # Extract data from client message
         paddlePos, = data.split(",")
-        clientPaddleObj.rect.y = int(paddlePos)
+        clientPaddleObj.rect.y = paddlePos
 
         # Ball Logic NEED SERVER SIDE PROCESSING 
 
@@ -73,7 +68,7 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
 
 def main() -> None:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind(("0.0.0.0", 5555))  # Bind to all available IP addresses on port 5555
+    server.bind(("0.0.0.0", 49153))  # Bind to all available IP addresses on port 5555
     server.listen(2)  # Wait for 2 players to connect
 
     print("[*] Server started, waiting for players...")
