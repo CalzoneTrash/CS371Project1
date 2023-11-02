@@ -83,7 +83,32 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Your code here to send an update to the server on your paddle's information,
         # where the ball is and the current score.
         # Feel free to change when the score is updated to suit your needs/requirements
-        
+
+        # Send paddle position to the server
+        send_data = f"{playerPaddleObj.rect.y}"
+        client.sendall(send_data.encode('utf-8'))
+
+        # Receive data from server
+        try:
+            received_data = client.recv(1024).decode('utf-8')
+        except BlockingIOError:
+            # Non-blocking mode exception handling (if set to non-blocking)
+            pass
+        except ConnectionResetError:
+            # Handle disconnection from server, perhaps try to reconnect or quit
+            print("Disconnected from server")
+            break
+
+        # Process received data (need to align this with the server's expected protocol)
+        # Example assuming server sends "ball_x,ball_y,opponent_y,score1,score2"
+        try:
+            ball_x, ball_y, opponent_y, score1, score2 = map(int, received_data.split(','))
+            ball.rect.x, ball.rect.y = ball_x, ball_y
+            opponentPaddleObj.rect.y = opponent_y
+            lScore, rScore = score1, score2
+        except ValueError:
+            # Handle case where received data is not in the expected format
+            pass
         
         # =========================================================================================
 
@@ -156,6 +181,9 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
 
+        # Update the display and tick the clock
+        pygame.display.flip()
+        clock.tick(60)
         # =========================================================================================
 
 
@@ -178,12 +206,24 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Get the required information from your server (screen width, height & player paddle, "left or "right)
+    try:
+        client.connect((ip, int(port)))
+        # Receive initial game state from the server
+        initial_data = client.recv(1024).decode('utf-8')
+        # Example format: "screenWidth,screenHeight,playerPaddle"
+        screenWidth, screenHeight, playerPaddle = initial_data.split(',')
 
+        # You might also want to implement some error checking here
 
-    # If you have messages you'd like to show the user use the errorLabel widget like so
-    errorLabel.config(text=f"Some update text. You input: IP: {ip}, Port: {port}")
-    # You may or may not need to call this, depending on how many times you update the label
-    errorLabel.update()     
+        # Start the game
+        app.withdraw()  # Hides the tkinter window
+        playGame(int(screenWidth), int(screenHeight), playerPaddle, client)
+        app.quit()  # Kills the tkinter window
+    except Exception as e:
+        # Handle exceptions, such as connection failure
+        errorLabel.config(text=f"Failed to connect to server: {e}")
+        errorLabel.update()
+
 
     # Close this window and start the game with the info passed to you from the server
     #app.withdraw()     # Hides the window (we'll kill it later)
@@ -227,4 +267,4 @@ if __name__ == "__main__":
     # Uncomment the line below if you want to play the game without a server to see how it should work
     # the startScreen() function should call playGame with the arguments given to it by the server this is
     # here for demo purposes only
-    #playGame(640, 480,"left",socket.socket(socket.AF_INET, socket.SOCK_STREAM))
+    # playGame(640, 480,"left",socket.socket(socket.AF_INET, socket.SOCK_STREAM))
