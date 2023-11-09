@@ -23,20 +23,9 @@ from typing import Dict, Tuple
 clients: Dict[Tuple[str, int], socket.socket] = {}  # Dictionary to hold client sockets
 
 def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> None:
-    global ball, leftPaddle, rightPaddle, lScore, rScore
 
-    # Assign paddles to the players
-    if not clients:
-        playerPaddle = "left"
-        clientPaddleObj = leftPaddle
-    else:
-        playerPaddle = "right"
-        clientPaddleObj = rightPaddle
-
+    
     clients[address] = client_socket
-
-    # Inform the client of their paddle assignment and the screen dimensions
-    client_socket.send(f"{playerPaddle},640,480".encode())
 
     while True:
         try:
@@ -44,16 +33,28 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
         except ConnectionResetError:
             break
         
-        # Extract data from client message
-        paddlePos, = data.split(",")
-        clientPaddleObj.rect.y = paddlePos
-
-        # Ball Logic NEED SERVER SIDE PROCESSING 
-
-        # BALLS LOGIC
-
-        # Create message with the updated positions of all game objects
-        message = f"{ball.rect.x},{ball.rect.y},{leftPaddle.rect.y},{rightPaddle.rect.y},{lScore},{rScore}"
+        
+        #split into parts
+        data_parts = data.split('@')
+        ball_data = data_parts[0]
+        leftPaddle_data = data_parts[1]
+        rightPaddle_data = data_parts[2]
+        lScore_data = data_parts[3]
+        rScore_data = data_parts[4]
+        sync_data = data_parts[5]
+        
+        ball_pos_data = ball_data.split(',')
+        
+        #split into floats/ints
+        ball_x = float(ball_pos_data[0])
+        ball_y = float(ball_pos_data[1])
+        leftPaddle_y = float(leftPaddle_data)
+        rightPaddle_y = float(rightPaddle_data)
+        lScore = int(lScore_data)
+        rScore = int(rScore_data)
+        sync = int(sync_data)
+        #check sync and handle appropriately
+        
         
         # Broadcast the message to all clients
         for client in clients.values():
