@@ -26,7 +26,7 @@ server.listen(2)
 clients: Dict[Tuple[str, int], socket.socket] = {}  # Dictionary to hold client sockets
 
 def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> None:
-
+    
     
     clients[address] = client_socket
 
