@@ -14,9 +14,6 @@ import json
 
 from assets.code.helperCode import *
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect("localhost", 69420)
-client.send("playerconnected".encode())
 # This is the main game loop.  For the most part, you will not need to modify this.  The sections
 # where you should add to the code are marked.  Feel free to change any part of this project
 # to suit your needs.
@@ -145,7 +142,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 "rScore": rScore,
                 "sync": sync
             }
-            
+
         # Convert JSON object to string and send it to the server
         client.sendall(json.dumps(send_data).encode('utf-8'))
         # =========================================================================================
