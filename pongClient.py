@@ -10,6 +10,7 @@ import pygame
 import tkinter as tk
 import sys
 import socket
+import json
 
 from assets.code.helperCode import *
 
@@ -20,7 +21,7 @@ client.send("playerconnected".encode())
 # where you should add to the code are marked.  Feel free to change any part of this project
 # to suit your needs.
 def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.socket) -> None:
-    
+    global send_data
     # Pygame inits
     pygame.mixer.pre_init(44100, -16, 2, 2048)
     pygame.init()
@@ -60,7 +61,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
     lScore = 0
     rScore = 0
-
     sync = 0
 
     while True:
@@ -94,6 +94,8 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Receive data from server
         try:
             received_data = client.recv(1024).decode('utf-8')
+            # Parse the data as JSON
+            data_json = json.loads(received_data)
         except BlockingIOError:
             # Non-blocking mode exception handling (if set to non-blocking)
             pass
@@ -101,18 +103,51 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             # Handle disconnection from server, perhaps try to reconnect or quit
             print("Disconnected from server")
             break
-
-        # Process received data (need to align this with the server's expected protocol)
-        # Example assuming server sends "ball_x,ball_y,opponent_y,score1,score2"
-        try:
-            ball_x, ball_y, opponent_y, score1, score2 = map(int, received_data.split(','))
-            ball.rect.x, ball.rect.y = ball_x, ball_y
-            opponentPaddleObj.rect.y = opponent_y
-            lScore, rScore = score1, score2
-        except ValueError:
-            # Handle case where received data is not in the expected format
+        except json.JSONDecodeError:
+            # Handle invalid JSON data
             pass
         
+        # Extract data from JSON object
+        try:
+            ball_x = data_json['ball']['x']
+            ball_y = data_json['ball']['y']
+            opponent_y = data_json['opponentPaddle']
+            lScore = data_json['lScore']
+            rScore = data_json['rScore']
+
+            ball.rect.x, ball.rect.y = ball_x, ball_y
+            opponentPaddleObj.rect.y = opponent_y
+        except KeyError:
+            # Handle case where received data does not contain expected keys
+            pass
+
+        if playerPaddle == "left":
+            send_data = {
+                "ball": {
+                    "x": ball.rect.x,
+                    "y": ball.rect.y
+                },
+                "leftPaddle_y": playerPaddleObj.rect.y,
+                "rightPaddle_y": opponentPaddleObj.rect.y,
+                "lScore": lScore,
+                "rScore": rScore,
+                "sync": sync
+            }
+        elif playerPaddle == "right":
+            send_data = {
+                "ball": {
+                    "x": ball.rect.x,
+                    "y": ball.rect.y
+                },
+                "leftPaddle_y": opponentPaddleObj.rect.y,
+                "rightPaddle_y": playerPaddleObj.rect.y,
+                "lScore": lScore,
+                "rScore": rScore,
+                "sync": sync
+            }
+            
+        # Convert JSON object to string and send it to the server
+        client.sendall(json.dumps(send_data).encode('utf-8'))
         # =========================================================================================
 
         # Update the player paddle and opponent paddle's location on the screen

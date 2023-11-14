@@ -5,6 +5,7 @@
 # Purpose:                  Server Code
 # Misc:                     <Not Required.  Anything else you might want to include>
 # =================================================================================================
+import json
 import socket
 import threading
 from assets.code.helperCode import *
@@ -22,53 +23,71 @@ server.bind("localhost", 69420)
 server.listen(2)
 
 # Global variables
-
 clients: Dict[Tuple[str, int], socket.socket] = {}  # Dictionary to hold client sockets
+sync_values: Dict[Tuple[str, int], int] = {}
 
 def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> None:
-    
-    
+    global client_data, sync_values
     clients[address] = client_socket
 
     while True:
         try:
             data = client_socket.recv(1024).decode()
+            data_json = json.loads(data)
         except ConnectionResetError:
             break
+        except json.JSONDecodeError:
+            print("Invalid JSON received")
+            continue
         
-        
-        #split into parts
-        data_parts = data.split('@')
-        ball_data = data_parts[0]
-        leftPaddle_data = data_parts[1]
-        rightPaddle_data = data_parts[2]
-        lScore_data = data_parts[3]
-        rScore_data = data_parts[4]
-        sync_data = data_parts[5]
-        
-        ball_pos_data = ball_data.split(',')
-        
-        #split into floats/ints
-        ball_x = float(ball_pos_data[0])
-        ball_y = float(ball_pos_data[1])
-        leftPaddle_y = float(leftPaddle_data)
-        rightPaddle_y = float(rightPaddle_data)
-        lScore = int(lScore_data)
-        rScore = int(rScore_data)
-        sync = int(sync_data)
-        #check sync and handle appropriately
-        
-        
+        # Extract data from JSON
+        ball_x = data_json['ball']['x']
+        ball_y = data_json['ball']['y']
+        leftPaddle_y = data_json['leftPaddle']
+        rightPaddle_y = data_json['rightPaddle']
+        lScore = data_json['lScore']
+        rScore = data_json['rScore']
+        sync = data_json['sync']
+
+        # Store sync value
+        client_data[address] = data_json
+        sync_values[address] = data_json['sync']
+
+        # Check if we have sync values from both clients
+        if len(sync_values) == 2:
+            # Find the client with the highest sync value
+            highest_sync_client = max(sync_values, key=sync_values.get)
+
+            # If the highest sync is from the current client, broadcast its message
+            if highest_sync_client == address:
+                message = json.dumps(client_data[address])
+                for client in clients.values():
+                    client.send(message.encode('utf-8'))
+                
+                # Clear the sync value for this client
+                sync_values.pop(address, None)
+
         # Broadcast the message to all clients
+        message = json.dumps({
+            "ball": {"x": ball_x, "y": ball_y},
+            "leftPaddle": leftPaddle_y,
+            "rightPaddle": rightPaddle_y,
+            "lScore": lScore,
+            "rScore": rScore
+        })
+
         for client in clients.values():
-            client.send(message.encode())
+            client.send(message.encode('utf-8'))
 
         if len(clients) < 2:
             break
 
     # Remove client if they disconnect
     del clients[address]
+    del client_data[address]
+    sync_values.pop(address, None)
     client_socket.close()
+
 
 def main() -> None:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
