@@ -24,7 +24,7 @@ clients: Dict[Tuple[str, int], socket.socket] = {}  # Dictionary to hold client 
 sync_values: Dict[Tuple[str, int], int] = {}
 
 def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> None:
-    global client_data, sync_values
+    global sync_values
     clients[address] = client_socket
 
     while True:
@@ -47,7 +47,6 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
         sync = data_json['sync']
 
         # Store sync value
-        client_data[address] = data_json
         sync_values[address] = data_json['sync']
 
         # Check if we have sync values from both clients
@@ -57,12 +56,11 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
 
             # If the highest sync is from the current client, broadcast its message
             if highest_sync_client == address:
-                message = json.dumps(client_data[address])
-                for client in clients.values():
-                    client.send(message.encode('utf-8'))
+                message = json.dumps(data_json)
+                client_socket.send(message.encode('utf-8'))
                 
                 # Clear the sync value for this client
-                sync_values.pop(address, None)
+                # sync_values.pop(address, None)
 
         # Broadcast the message to all clients
         message = json.dumps({
@@ -73,16 +71,11 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
             "rScore": rScore
         })
 
-        for client in clients.values():
-            client.send(message.encode('utf-8'))
-
         if len(clients) < 2:
             break
 
     # Remove client if they disconnect
     del clients[address]
-    del client_data[address]
-    sync_values.pop(address, None)
     client_socket.close()
 
 
@@ -98,6 +91,8 @@ def main() -> None:
 
     client_socket2, addr2 = server.accept()
     print(f"[*] Accepted connection from: {addr2}")
+
+    
     try:
         client_handler1 = threading.Thread(target=handle_client, args=(client_socket1, addr1))
         client_handler2 = threading.Thread(target=handle_client, args=(client_socket2, addr2))
