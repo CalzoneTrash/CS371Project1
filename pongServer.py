@@ -61,15 +61,6 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
                 # Clear the sync value for this client
                 # sync_values.pop(address, None)
 
-        # Broadcast the message to all clients
-        message = json.dumps({
-            "ball": {"x": ball_x, "y": ball_y},
-            "leftPaddle": leftPaddle_y,
-            "rightPaddle": rightPaddle_y,
-            "lScore": lScore,
-            "rScore": rScore
-        })
-
         if len(clients) < 2:
             break
 

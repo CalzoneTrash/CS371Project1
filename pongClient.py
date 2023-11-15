@@ -111,7 +111,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
         # Convert JSON object to string and send it to the server
         client.sendall(json.dumps(send_data).encode('utf-8'))
-        
+
         # Receive data from server
         try:
             received_data = client.recv(1024).decode('utf-8')
@@ -125,23 +125,37 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             print("Disconnected from server")
             break
         except json.JSONDecodeError:
+            print("JSON Error")
             # Handle invalid JSON data
             pass
-        
-        # Extract data from JSON object
-        try:
-            ball_x = data_json['ball']['x']
-            ball_y = data_json['ball']['y']
-            opponent_y = data_json['opponentPaddle']
-            lScore = data_json['lScore']
-            rScore = data_json['rScore']
+        if playerPaddle == "left":
+            # Extract data from JSON object
+            try:
+                ball_x = data_json['ball']['x']
+                ball_y = data_json['ball']['y']
+                opponent_y = data_json['rightPaddle']
+                lScore = data_json['lScore']
+                rScore = data_json['rScore']
 
-            ball.rect.x, ball.rect.y = ball_x, ball_y
-            opponentPaddleObj.rect.y = opponent_y
-        except KeyError:
-            # Handle case where received data does not contain expected keys
-            pass
+                ball.rect.x, ball.rect.y = ball_x, ball_y
+                opponentPaddleObj.rect.y = opponent_y
+            except KeyError:
+                # Handle case where received data does not contain expected keys
+                pass
+        elif playerPaddle == "right":
+            # Extract data from JSON object
+            try:
+                ball_x = data_json['ball']['x']
+                ball_y = data_json['ball']['y']
+                opponent_y = data_json['leftPaddle']
+                lScore = data_json['lScore']
+                rScore = data_json['rScore']
 
+                ball.rect.x, ball.rect.y = ball_x, ball_y
+                opponentPaddleObj.rect.y = opponent_y
+            except KeyError:
+                # Handle case where received data does not contain expected keys
+                pass
         
         # =========================================================================================
 
