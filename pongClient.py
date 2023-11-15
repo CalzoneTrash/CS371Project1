@@ -59,7 +59,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
     lScore = 0
     rScore = 0
-    sync = 0
+    sync = 1
 
     #MAIN WHILE LOOP FOR CLIENT TO PLAY GAME
     while True:
@@ -113,16 +113,19 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             }
 
         # Convert JSON object to string and send it to the server
+        print(f"{ball_x} @ {ball_y} @ {opponentPaddleObj.rect.y} @ {playerPaddleObj.rect.y} @ {lScore} @ {rScore} @ {sync}") # TESTING!
         data_update = json.dumps(send_data)
         client.sendall(data_update.encode('utf-8'))
 
+        print(f"WE MADE IT TO Receive data from server FOR {client}\n") # TESTING
         # Receive data from server
         try:
-            received_data = client.recv(1024).decode('utf-8')
+            received_data = client.recv(4096).decode('utf-8')
             # Parse the data as JSON
             data_json = json.loads(received_data)
         except BlockingIOError:
             # Non-blocking mode exception handling (if set to non-blocking)
+            print(f"NON-BLOCK ERROR FOR {client}\n") # TESTING
             pass
         except ConnectionResetError:
             # Handle disconnection from server, perhaps try to reconnect or quit
@@ -142,7 +145,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 opponent_y = data_json['rightPaddle']
                 lScore = data_json['lScore']
                 rScore = data_json['rScore']
-
                 ball.rect.x, ball.rect.y = ball_x, ball_y
                 opponentPaddleObj.rect.y = opponent_y
             except KeyError:
@@ -233,6 +235,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # then you are ahead of them in time, if theirs is larger, they are ahead of you, and you need to
         # catch up (use their info)
         sync += 1
+        print(f"WE MADE IT TO SYNC INCREMENT FOR {client} SYNC IS: {sync}\n") # TESTING
         # =========================================================================================
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game

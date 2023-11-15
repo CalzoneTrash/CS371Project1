@@ -8,6 +8,7 @@
 import json
 import socket
 import threading
+import tkinter as tk
 from assets.code.helperCode import *
 from typing import Dict, Tuple
 
@@ -55,14 +56,18 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
         except Exception as e:
             print(f"Error handling client {address}: {e}")
         print(f"WE MADE IT TO INITIALIZE HANDLE CLIENT FOR {address} \n") #TESTING
-
+    while len(clients) != 2:
+        continue
     #########################Main While Loop#############################################################################
     while True:
+
         print(f"WE MADE IT TO HANDLE CLIENT LOOP FOR {address} \n") #TESTING
         try:
-            data = client_socket.recv(1024).decode('utf-8')
+            data = client_socket.recv(4096).decode('utf-8')
             data_json = json.loads(data)
+            print(f"we made it to receive data for {address} \n") #TESTING
         except ConnectionResetError:
+            print(f"Connection reset \n") # TESTING!
             break
         except json.JSONDecodeError as e:
             print(f"Invalid JSON received: {data} - Error: {e}")
@@ -76,11 +81,12 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
         lScore = data_json['lScore']
         rScore = data_json['rScore']
         sync = data_json['sync']
+        print(f"{ball_x} @ {ball_y} @ {leftPaddle_y} @ {rightPaddle_y} @ {lScore} @ {rScore} @ {sync}") # TESTING!
 
         # Store sync value
         with sync_values_lock:
             sync_values[address] = data_json['sync']
-
+            print(f"sync value for {address} is {sync_values[address]} \n") # TESTING!
             # Check if we have sync values from both clients
             if len(sync_values) == 2:
                 # Find the client with the highest sync value
@@ -88,11 +94,21 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
 
                 # If the highest sync is from the current client, broadcast its message
                 if highest_sync_client == address:
-                    message = json.dumps(data_json)
+                    new_message = {
+                        "ball": {
+                            "x": ball_x,
+                            "y": ball_y
+                        },
+                        "leftPaddle_y": leftPaddle_y,
+                        "rightPaddle_y": rightPaddle_y,
+                        "lScore": lScore,
+                        "rScore": rScore,
+                        "sync": sync
+                    }
                     with clients_lock:
                         for client in clients.values():
                             print(f"clients contains: {client}\n") # TESTING!
-                            client.sendall(message.encode('utf-8'))
+                            client.sendall(new_message.encode('utf-8'))
         # End loop if client disconnects
         if len(clients) < 2:
             break
