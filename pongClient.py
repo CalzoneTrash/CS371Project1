@@ -18,8 +18,8 @@ from assets.code.helperCode import *
 # where you should add to the code are marked.  Feel free to change any part of this project
 # to suit your needs.
 def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.socket) -> None:
-    print(f"WE MADE IT TO PLAY GAME FOR {client}\n") #TESTING
-    global send_data
+    # global send_data
+    # print(f"WE MADE IT TO PLAY GAME FOR {client}\n") #TESTING
     # Pygame inits
     pygame.mixer.pre_init(44100, -16, 2, 2048)
     pygame.init()
@@ -63,7 +63,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
     #MAIN WHILE LOOP FOR CLIENT TO PLAY GAME
     while True:
-        print(f"WE MADE IT TO THE LOOP FOR {client}\n") # TESTING
+        # print(f"WE MADE IT TO THE LOOP FOR {client}\n") # TESTING
         # Wiping the screen
         screen.fill((0,0,0))
 
@@ -112,20 +112,20 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 "sync": sync
             }
 
-        # Convert JSON object to string and send it to the server
-        print(f"{ball_x} @ {ball_y} @ {opponentPaddleObj.rect.y} @ {playerPaddleObj.rect.y} @ {lScore} @ {rScore} @ {sync}") # TESTING!
+        # Convert JSON object and send it to the server
+        # print(f"{ball_x} @ {ball_y} @ {opponentPaddleObj.rect.y} @ {playerPaddleObj.rect.y} @ {lScore} @ {rScore} @ {sync}") # TESTING!
         data_update = json.dumps(send_data)
-        client.sendall(data_update.encode('utf-8'))
+        client.send(data_update.encode('utf-8'))
 
-        print(f"WE MADE IT TO Receive data from server FOR {client}\n") # TESTING
+        # print(f"WE MADE IT TO Receive data from server FOR {client}\n") # TESTING
         # Receive data from server
         try:
-            received_data = client.recv(4096).decode('utf-8')
+            received_data = client.recv(1024).decode('utf-8')
             # Parse the data as JSON
             data_json = json.loads(received_data)
         except BlockingIOError:
             # Non-blocking mode exception handling (if set to non-blocking)
-            print(f"NON-BLOCK ERROR FOR {client}\n") # TESTING
+            # print(f"NON-BLOCK ERROR FOR {client}\n") # TESTING
             pass
         except ConnectionResetError:
             # Handle disconnection from server, perhaps try to reconnect or quit
@@ -235,7 +235,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # then you are ahead of them in time, if theirs is larger, they are ahead of you, and you need to
         # catch up (use their info)
         sync += 1
-        print(f"WE MADE IT TO SYNC INCREMENT FOR {client} SYNC IS: {sync}\n") # TESTING
+        # print(f"WE MADE IT TO SYNC INCREMENT FOR {client} SYNC IS: {sync}\n") # TESTING
         # =========================================================================================
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
@@ -259,7 +259,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # port          A string holding the port the server is using
     # errorLabel    A tk label widget, modify it's text to display messages to the user (example below)
     # app           The tk window object, needed to kill the window
-    print(f"WE MADE IT TO JOIN SERVER \n") #TESTING
+    # print(f"WE MADE IT TO JOIN SERVER \n") #TESTING
 
     # Create a socket and connect to the server
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
