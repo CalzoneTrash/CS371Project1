@@ -20,20 +20,45 @@ from typing import Dict, Tuple
 
 # Global variables
 clients: Dict[Tuple[str, int], socket.socket] = {}  # Dictionary to hold client sockets
-sync_values: Dict[Tuple[str, int], int] = {}
+sync_values: Dict[Tuple[str, int], int] = {} # dict to hold current sync value for each client
+SCREEN_WIDTH = 640
+SCREEN_HEIGHT = 480
 
 def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> None:
     global sync_values
     clients[address] = client_socket
 
+    #initial data send in JSON format
+    if len(clients) == 1:
+        initial_data = {
+            "screen_width": SCREEN_WIDTH,
+            "screen_height": SCREEN_HEIGHT,
+            "paddle": "left"
+        }
+    else:
+        initial_data = {
+            "screen_width": SCREEN_WIDTH,
+            "screen_height": SCREEN_HEIGHT,
+            "paddle": "right"
+        }
+    
+    #NOW SEND IT!
+    try:
+        ini_send = json.dumps(initial_data)
+        client_socket.send(ini_send.encode('utf-8'))
+    except Exception as e:
+        print(f"Error handling client {address}: {e}")
+
+    #########################Main While Loop#############################################################################
     while True:
+        print(f"WE MADE IT TO HANDLE CLIENT LOOP FOR {address} \n") #TESTING
         try:
-            data = client_socket.recv(1024).decode()
+            data = client_socket.recv(1024).decode('utf-8')
             data_json = json.loads(data)
         except ConnectionResetError:
             break
-        except json.JSONDecodeError:
-            print("Invalid JSON received")
+        except json.JSONDecodeError as e:
+            print(f"Invalid JSON received: {data} - Error: {e}")
             continue
         
         # Extract data from JSON
@@ -56,10 +81,8 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
             # If the highest sync is from the current client, broadcast its message
             if highest_sync_client == address:
                 message = json.dumps(data_json)
-                client_socket.send(message.encode('utf-8'))
-                
-                # Clear the sync value for this client
-                # sync_values.pop(address, None)
+                for client in clients.values():
+                    client.send(message.encode('utf-8'))
 
         if len(clients) < 2:
             break

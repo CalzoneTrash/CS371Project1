@@ -18,6 +18,7 @@ from assets.code.helperCode import *
 # where you should add to the code are marked.  Feel free to change any part of this project
 # to suit your needs.
 def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.socket) -> None:
+    print(f"WE MADE IT TO PLAY GAME \n") #TESTING
     global send_data
     # Pygame inits
     pygame.mixer.pre_init(44100, -16, 2, 2048)
@@ -59,8 +60,8 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
     lScore = 0
     rScore = 0
     sync = 0
-
     while True:
+        print(f"WE MADE IT TO THE LOOP\n") # TESTING
         # Wiping the screen
         screen.fill((0,0,0))
 
@@ -247,39 +248,33 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # port          A string holding the port the server is using
     # errorLabel    A tk label widget, modify it's text to display messages to the user (example below)
     # app           The tk window object, needed to kill the window
-    
+    print(f"WE MADE IT TO JOIN SERVER \n") #TESTING
+
     # Create a socket and connect to the server
-    # You don't have to use SOCK_STREAM, use what you think is best
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Get the required information from your server (screen width, height & player paddle, "left or "right)
     try:
         client.connect((ip, int(port)))
-        # Receive initial game state from the server
-        initial_data = client.recv(1024).decode('utf-8')
-        # Example format: "screenWidth,screenHeight,playerPaddle"
-        screenWidth, screenHeight, playerPaddle = initial_data.split(',')
 
-        # You might also want to implement some error checking here
+        rec_init_data = client.recv(1024).decode('utf-8')
+        json_init_data = json.loads(rec_init_data)
 
-        # Start the game
-        app.withdraw()  # Hides the tkinter window
-        playGame(int(screenWidth), int(screenHeight), playerPaddle, client)
-        app.quit()  # Kills the tkinter window
+        screenWidth = json_init_data["screen_width"]
+        screenHeight = json_init_data["screen_height"]
+        left_right_paddle = json_init_data["paddle"]
+
+        # Close this window and start the game with the info passed to you from the server
+        app.withdraw()     # Hides the window (we'll kill it later)
+        playGame(screenWidth, screenHeight, left_right_paddle, client)  # User will be either left or right paddle
+        app.quit()         # Kills the window
     except Exception as e:
         # Handle exceptions, such as connection failure
-        errorLabel.config(text=f"Failed to connect to server: {e}")
+        errorLabel.config(text=f"Failed to connect to server: {e} | IP: {ip}, Port: {port}")
         errorLabel.update()
 
-
-    # Close this window and start the game with the info passed to you from the server
-    #app.withdraw()     # Hides the window (we'll kill it later)
-    #playGame(screenWidth, screenHeight, ("left"|"right"), client)  # User will be either left or right paddle
-    #app.quit()         # Kills the window
-
-
 # This displays the opening screen, you don't need to edit this (but may if you like)
-def startScreen():
+def startScreen() -> None:
     app = tk.Tk()
     app.title("Server Info")
 
