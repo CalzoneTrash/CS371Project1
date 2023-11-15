@@ -17,10 +17,7 @@ from typing import Dict, Tuple
 # for each player and where the ball is, and relay that to each client
 # I suggest you use the sync variable in pongClient.py to determine how out of sync your two
 # clients are and take actions to resync the games
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-server.bind("localhost", 69420)
-server.listen(2)
+
 
 # Global variables
 clients: Dict[Tuple[str, int], socket.socket] = {}  # Dictionary to hold client sockets
