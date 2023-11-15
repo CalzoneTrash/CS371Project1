@@ -18,7 +18,6 @@ from typing import Dict, Tuple
 # I suggest you use the sync variable in pongClient.py to determine how out of sync your two
 # clients are and take actions to resync the games
 
-
 # Global variables
 clients: Dict[Tuple[str, int], socket.socket] = {}  # Dictionary to hold client sockets
 sync_values: Dict[Tuple[str, int], int] = {}
