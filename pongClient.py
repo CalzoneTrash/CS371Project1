@@ -18,7 +18,7 @@ from assets.code.helperCode import *
 # where you should add to the code are marked.  Feel free to change any part of this project
 # to suit your needs.
 def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.socket) -> None:
-    print(f"WE MADE IT TO PLAY GAME \n") #TESTING
+    print(f"WE MADE IT TO PLAY GAME FOR {client}\n") #TESTING
     global send_data
     # Pygame inits
     pygame.mixer.pre_init(44100, -16, 2, 2048)
@@ -60,8 +60,10 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
     lScore = 0
     rScore = 0
     sync = 0
+
+    #MAIN WHILE LOOP FOR CLIENT TO PLAY GAME
     while True:
-        print(f"WE MADE IT TO THE LOOP\n") # TESTING
+        print(f"WE MADE IT TO THE LOOP FOR {client}\n") # TESTING
         # Wiping the screen
         screen.fill((0,0,0))
 
@@ -111,7 +113,8 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             }
 
         # Convert JSON object to string and send it to the server
-        client.sendall(json.dumps(send_data).encode('utf-8'))
+        data_update = json.dumps(send_data)
+        client.sendall(data_update.encode('utf-8'))
 
         # Receive data from server
         try:
@@ -126,11 +129,13 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             print("Disconnected from server")
             break
         except json.JSONDecodeError:
-            print("JSON Error")
             # Handle invalid JSON data
+            print("JSON Error")
             pass
-        if playerPaddle == "left":
-            # Extract data from JSON object
+
+        # for leftplayer case
+        if playerPaddle == "left": 
+            # Extract data from JSON object for leftplayer case
             try:
                 ball_x = data_json['ball']['x']
                 ball_y = data_json['ball']['y']
@@ -141,10 +146,12 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 ball.rect.x, ball.rect.y = ball_x, ball_y
                 opponentPaddleObj.rect.y = opponent_y
             except KeyError:
-                # Handle case where received data does not contain expected keys
+                # Handle case where received data does not contain expected keys for leftplayer case
+                print(f"There was a problem with the KEYS of data_JSON for {client}")
                 pass
+        # for right player case
         elif playerPaddle == "right":
-            # Extract data from JSON object
+            # Extract data from JSON object for right player case
             try:
                 ball_x = data_json['ball']['x']
                 ball_y = data_json['ball']['y']
@@ -155,7 +162,8 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 ball.rect.x, ball.rect.y = ball_x, ball_y
                 opponentPaddleObj.rect.y = opponent_y
             except KeyError:
-                # Handle case where received data does not contain expected keys
+                # Handle case where received data does not contain expected keys for right player case
+                print(f"There was a problem with the KEYS of data_JSON for {client}")
                 pass
         
         # =========================================================================================
