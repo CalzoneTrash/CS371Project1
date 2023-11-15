@@ -84,10 +84,34 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # where the ball is and the current score.
         # Feel free to change when the score is updated to suit your needs/requirements
 
-        # Send paddle position to the server
-        send_data = f"{playerPaddleObj.rect.y}"
-        client.sendall(send_data.encode('utf-8'))
+        if playerPaddle == "left":
+            send_data = {
+                "ball": {
+                    "x": ball.rect.x,
+                    "y": ball.rect.y
+                },
+                "leftPaddle_y": playerPaddleObj.rect.y,
+                "rightPaddle_y": opponentPaddleObj.rect.y,
+                "lScore": lScore,
+                "rScore": rScore,
+                "sync": sync
+            }
+        elif playerPaddle == "right":
+            send_data = {
+                "ball": {
+                    "x": ball.rect.x,
+                    "y": ball.rect.y
+                },
+                "leftPaddle_y": opponentPaddleObj.rect.y,
+                "rightPaddle_y": playerPaddleObj.rect.y,
+                "lScore": lScore,
+                "rScore": rScore,
+                "sync": sync
+            }
 
+        # Convert JSON object to string and send it to the server
+        client.sendall(json.dumps(send_data).encode('utf-8'))
+        
         # Receive data from server
         try:
             received_data = client.recv(1024).decode('utf-8')
@@ -118,33 +142,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             # Handle case where received data does not contain expected keys
             pass
 
-        if playerPaddle == "left":
-            send_data = {
-                "ball": {
-                    "x": ball.rect.x,
-                    "y": ball.rect.y
-                },
-                "leftPaddle_y": playerPaddleObj.rect.y,
-                "rightPaddle_y": opponentPaddleObj.rect.y,
-                "lScore": lScore,
-                "rScore": rScore,
-                "sync": sync
-            }
-        elif playerPaddle == "right":
-            send_data = {
-                "ball": {
-                    "x": ball.rect.x,
-                    "y": ball.rect.y
-                },
-                "leftPaddle_y": opponentPaddleObj.rect.y,
-                "rightPaddle_y": playerPaddleObj.rect.y,
-                "lScore": lScore,
-                "rScore": rScore,
-                "sync": sync
-            }
-
-        # Convert JSON object to string and send it to the server
-        client.sendall(json.dumps(send_data).encode('utf-8'))
+        
         # =========================================================================================
 
         # Update the player paddle and opponent paddle's location on the screen
