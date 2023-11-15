@@ -93,13 +93,19 @@ def main() -> None:
 
     print("[*] Server started, waiting for players...")
     
-    while len(clients) < 2:
-        client_socket, addr = server.accept()
-        print(f"[*] Accepted connection from: {addr[0]}:{addr[1]}")
-        client_handler = threading.Thread(target=handle_client, args=(client_socket, addr))
-        client_handler.start()
+    client_socket1, addr1 = server.accept()
+    print(f"[*] Accepted connection from: {addr1}")
 
-    print("[*] Both players connected. Game started!")
+    client_socket2, addr2 = server.accept()
+    print(f"[*] Accepted connection from: {addr2}")
+    try:
+        client_handler1 = threading.Thread(target=handle_client, args=(client_socket1, addr1))
+        client_handler2 = threading.Thread(target=handle_client, args=(client_socket2, addr2))
+        client_handler1.start()
+        client_handler2.start()
+        print("[*] Both players connected. Game started!")
+    except Exception as e:
+        print(f"An error has occured {e}")
 
 if __name__ == "__main__":
     main()
