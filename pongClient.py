@@ -180,10 +180,10 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             sync = data_json['sync']
             left_player_y = data_json['left_paddle_y']
             right_player_y = data_json['right_paddle_y']
-            if lScore < data_json['lScore']:
-                lScore = data_json['lScore']
-            if rScore < data_json['rScore']:
-                rScore = data_json['rScore']
+            #if lScore < data_json['lScore']:
+            lScore = data_json['lScore']
+            #if rScore < data_json['rScore']:
+            rScore = data_json['rScore']
             ball.rect.x = data_json['ball_x']
             ball.rect.y =  data_json['ball_y']
             if playerPaddle == "left": # left case
@@ -242,7 +242,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
                break
             except json.JSONDecodeError:
                # Handle invalid JSON data
-               print("JSON Error")
+               print("JSON Error Start")
                pass
             
             # if game is ready to start

@@ -44,29 +44,8 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
         # receive request data (start, send or give)
         request = json.loads(client_socket.recv(2048).decode('utf-8'))
 
-        # if clients request is to start the game
-        if request['req'] == 'start':
-            with clients_lock:
-                clients_ready[paddle] = True
-                if len(clients_ready) == 2:
-                    if clients_ready['left'] == True and clients_ready['right'] == True:
-                        ret: Dict[str, bool] = {'return': True}
-                        client_socket.send(json.dumps(ret).encode('utf-8'))
-                        init_data = {
-                            'screen_width': SCREEN_WIDTH,
-                            'screen_height': SCREEN_HEIGHT,
-                            'paddle': paddle
-                            }
-                        client_socket.send(json.dumps(init_data).encode('utf-8'))
-                    else:
-                        ret: Dict[str, bool] = {'return': False}
-                        client_socket.send(json.dumps(ret).encode('utf-8'))
-                else:
-                    ret: Dict[str, bool] = {'return': False}
-                    client_socket.send(json.dumps(ret).encode('utf-8'))
-                
         # if clients request is send data to server 
-        elif request['req'] == 'send':
+        if request['req'] == 'send':
             # get data transmitted
             data_json = request['data']
 
@@ -86,17 +65,38 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
                     
         # if clients request is for server to give server data back               
         elif request['req'] == 'give':
-            response = {
-                        'ball_x': server_ball_x,
-                        'ball_y': server_ball_y,
-                        'left_paddle_y': server_left_paddle,
-                        'right_paddle_y': server_right_paddle,
-                        'lScore': server_lScore,
-                        'rScore': server_rScore,
-                        'sync': server_sync
-                    }
+            with sync_lock:
+                response = {
+                            'ball_x': server_ball_x,
+                            'ball_y': server_ball_y,
+                            'left_paddle_y': server_left_paddle,
+                            'right_paddle_y': server_right_paddle,
+                            'lScore': server_lScore,
+                            'rScore': server_rScore,
+                            'sync': server_sync
+                        }
             client_socket.send(json.dumps(response).encode('utf-8'))
-
+        # if clients request is to start the game
+        elif request['req'] == 'start':
+            with clients_lock:
+                clients_ready[paddle] = True
+                if len(clients_ready) == 2:
+                    if clients_ready['left'] == True and clients_ready['right'] == True:
+                        ret: Dict[str, bool] = {'return': True}
+                        client_socket.send(json.dumps(ret).encode('utf-8'))
+                        init_data = {
+                            'screen_width': SCREEN_WIDTH,
+                            'screen_height': SCREEN_HEIGHT,
+                            'paddle': paddle
+                            }
+                        client_socket.send(json.dumps(init_data).encode('utf-8'))
+                    else:
+                        ret: Dict[str, bool] = {'return': False}
+                        client_socket.send(json.dumps(ret).encode('utf-8'))
+                else:
+                    ret: Dict[str, bool] = {'return': False}
+                    client_socket.send(json.dumps(ret).encode('utf-8'))
+                
 
 def main() -> None:
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
