@@ -95,7 +95,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             'rScore': rScore,
             'sync': sync
         }
-
+        print(f"Data sent is ball_x{ball.rect.x} ball_y:{ball.rect.y} playerPaddle:{playerPaddleObj.rect.y} lScore:{lScore} rScore:{rScore} SYNC:{sync} \n") # TESTING
         # Convert JSON object and send it to the server
         send_request = {'req': 'send', 'data': send_data}
         client.send(json.dumps(send_request).encode('utf-8'))
@@ -161,12 +161,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         scoreRect = updateScore(lScore, rScore, screen, WHITE, scoreFont)
         pygame.display.update()
         clock.tick(60)
-        
-        # This number should be synchronized between you and your opponent.  If your number is larger
-        # then you are ahead of them in time, if theirs is larger, they are ahead of you, and you need to
-        # catch up (use their info)
-        sync += 1
-        # print(f"WE MADE IT TO SYNC INCREMENT FOR {client} SYNC IS: {sync}\n") # TESTING
+
         # =========================================================================================
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
@@ -186,29 +181,32 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             # Handle invalid JSON data
             print("JSON Error")
             pass
-
-        # for leftplayer case
     
-        # Extract data from JSON object for leftplayer case
+        # Extract data from JSON object and update variables
         try:
-            ball_x = data_json['ball_x']
-            ball_y = data_json['ball_y']
             left_player_y = data_json['left_paddle_y']
             right_player_y = data_json['right_paddle_y']
             lScore = data_json['lScore']
             rScore = data_json['rScore']
-            ball.rect.x, ball.rect.y = ball_x, ball_y
-            if playerPaddle == "left":
-                playerPaddleObj.rect.y = left_player_y
+            ball.rect.x = data_json['ball_x']
+            ball.rect.y =  data_json['ball_y']
+            if playerPaddle == "left": # left case
+                #playerPaddleObj.rect.y = left_player_y
                 opponentPaddleObj.rect.y = right_player_y
-            elif playerPaddle == "right":
-                playerPaddleObj.rect.y = right_player_y
+            elif playerPaddle == "right": # right case
+                #playerPaddleObj.rect.y = right_player_y
                 opponentPaddleObj.rect.y = left_player_y
         except KeyError:
-            # Handle case where received data does not contain expected keys for leftplayer case
+            # Handle case where received data does not contain expected keys
             print(f"There was a problem with the KEYS of data_JSON for \n")
             pass
 
+           
+        # This number should be synchronized between you and your opponent.  If your number is larger
+        # then you are ahead of them in time, if theirs is larger, they are ahead of you, and you need to
+        # catch up (use their info)
+        sync += 1
+        # print(f"WE MADE IT TO SYNC INCREMENT FOR {client} SYNC IS: {sync}\n") # TESTING
         
         # Update the display and tick the clock
         pygame.display.flip()

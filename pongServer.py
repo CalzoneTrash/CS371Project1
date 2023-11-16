@@ -30,26 +30,27 @@ server_ball_x: int = 0
 server_ball_y: int = 0
 server_left_paddle: int = 0
 server_right_paddle: int = 0
-requests: Dict[str, int] = {} #dict to hold request types
-clients_ready: Dict[Tuple[str, int], bool] = {}
+
+clients_ready: Dict[Tuple[str, int], bool] = {'left':False, 'right':False}
 sync_values: Dict[str, int] = {} # dict to hold current sync value for each client
 clients_lock = threading.Lock() # lock for clients_ready
 sync_lock = threading.Lock() # lock for sync data
 
 def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle: str) -> None:
-    global sync_values, clients_ready, requests, server_sync, server_lScore, server_rScore, server_ball_x, server_ball_y, server_left_paddle, server_right_paddle
-    server_currPaddle: int = 255
+    global sync_values, clients_ready, server_sync, server_lScore, server_rScore, server_ball_x, server_ball_y, server_left_paddle, server_right_paddle
+    #request: Dict[str, int] = {} #dict to hold request types
+    server_currPaddle: int = 55
     #MAIN LOOP
     while True:
         # receive request data (start, send or give)
         request = json.loads(client_socket.recv(1024).decode('utf-8'))
-        print(f"request was {request['req']}\n")
+        #print(f"request was {request['req']}\n") #TESTING
         # if clients request is to start the game
         if request['req'] == 'start':
             with clients_lock:
                 clients_ready[paddle] = True
                 if len(clients_ready) == 2:
-                    print(f"CLIENTS READY? LEFT: {clients_ready['left']} RIGHT:{clients_ready['left']} \n")
+                    #print(f"CLIENTS READY? LEFT: {clients_ready['left']} RIGHT:{clients_ready['left']} \n") # TESTING
                     if clients_ready['left'] == True and clients_ready['right'] == True:
                         ret: Dict[str, bool] = {'return': True}
                         client_socket.send(json.dumps(ret).encode('utf-8'))
@@ -87,6 +88,7 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
                     
         # if clients request is for server to give server data back               
         elif request['req'] == 'give':
+            print(f"GIVE DATA IS ball_x:{server_ball_x} ball_y:{server_ball_y} left_paddle_y:{server_left_paddle} right_paddle_y:{server_right_paddle} lScore:{server_lScore} rScore:{server_rScore} sync:{server_sync} \n")
             response = {
                         'ball_x': server_ball_x,
                         'ball_y': server_ball_y,
