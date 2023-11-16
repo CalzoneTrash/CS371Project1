@@ -1,9 +1,8 @@
 # =================================================================================================
 # Contributing Authors:	    Jacob Alteri, Knox Garland
 # Email Addresses:          jcal240@uky.edu, 
-# Date:                     11/01/2023
+# Date:                     11/16/2023
 # Purpose:                  Server Code
-# Misc:                     <Not Required.  Anything else you might want to include>
 # =================================================================================================
 import json
 import socket
@@ -75,10 +74,8 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
             with sync_lock:
                 if data_json['sync'] > server_sync:   
                     server_sync = data_json['sync']
-                    if server_lScore < data_json['lScore']:
-                        server_lScore = data_json['lScore']
-                    if server_rScore < data_json['rScore']:
-                        server_rScore = data_json['rScore']
+                    server_lScore = data_json['lScore']
+                    server_rScore = data_json['rScore']
                     server_ball_x = data_json['ball_x']
                     server_ball_y = data_json['ball_y']
                     server_currPaddle = data_json['playerPaddle_y']
@@ -89,19 +86,16 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
                     
         # if clients request is for server to give server data back               
         elif request['req'] == 'give':
-            with sync_lock:
-                response = {
-                            'ball_x': server_ball_x,
-                            'ball_y': server_ball_y,
-                            'left_paddle_y': server_left_paddle,
-                            'right_paddle_y': server_right_paddle,
-                            'lScore': server_lScore,
-                            'rScore': server_rScore,
-                            'sync': server_sync
-                        }
+            response = {
+                        'ball_x': server_ball_x,
+                        'ball_y': server_ball_y,
+                        'left_paddle_y': server_left_paddle,
+                        'right_paddle_y': server_right_paddle,
+                        'lScore': server_lScore,
+                        'rScore': server_rScore,
+                        'sync': server_sync
+                    }
             client_socket.send(json.dumps(response).encode('utf-8'))
-            
-
 
 
 def main() -> None:

@@ -1,9 +1,8 @@
 # =================================================================================================
 # Contributing Authors:	    Jacob Alteri, Knox Garland
 # Email Addresses:          jcal240@uky.edu, 
-# Date:                     11/01/2023
+# Date:                     11/16/2023
 # Purpose:                  Main Game Loop for Clients
-# Misc:                     <Not Required.  Anything else you might want to include>
 # =================================================================================================
 
 import pygame
@@ -83,7 +82,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Your code here to send an update to the server on your paddle's information,
         # where the ball is and the current score.
         # Feel free to change when the score is updated to suit your needs/requirements
-        #ball.updatePos() # DELETE??
         send_data = {
             'ball_x': ball.rect.x,
             'ball_y': ball.rect.y,
@@ -175,18 +173,19 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         except json.JSONDecodeError:
             # Handle invalid JSON data
             print("JSON Error")
-            pass
+            #continue
     
         # Extract data from JSON object and update variables
         try:
             sync = data_json['sync']
             left_player_y = data_json['left_paddle_y']
             right_player_y = data_json['right_paddle_y']
-            lScore = data_json['lScore']
-            rScore = data_json['rScore']
+            if lScore < data_json['lScore']:
+                lScore = data_json['lScore']
+            if rScore < data_json['rScore']:
+                rScore = data_json['rScore']
             ball.rect.x = data_json['ball_x']
             ball.rect.y =  data_json['ball_y']
-            ball.updatePos()
             if playerPaddle == "left": # left case
                 opponentPaddleObj.rect.y = right_player_y
             elif playerPaddle == "right": # right case
@@ -200,7 +199,8 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # then you are ahead of them in time, if theirs is larger, they are ahead of you, and you need to
         # catch up (use their info)
         sync += 1
-        
+        ball.updatePos()
+
         # Update the display and tick the clock
         pygame.display.flip()
         clock.tick(60)
