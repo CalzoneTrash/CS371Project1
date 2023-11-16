@@ -247,9 +247,21 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
             client.send(json.dumps(send_request).encode('utf-8'))
 
             #receive response from server
-            rec_init_data = client.recv(1024).decode('utf-8')
-            json_init_data = json.loads(rec_init_data)
-
+            try:
+                rec_init_data = client.recv(1024).decode('utf-8')
+                json_init_data = json.loads(rec_init_data)
+            except BlockingIOError:
+               # Non-blocking mode exception handling (if set to non-blocking)
+               pass
+            except ConnectionResetError:
+               # Handle disconnection from server, perhaps try to reconnect or quit
+               print("Disconnected from server")
+               break
+            except json.JSONDecodeError:
+               # Handle invalid JSON data
+               print("JSON Error")
+               pass
+            
             # if game is ready to start
             if json_init_data['return'] == True:
                 initial_data = client.recv(1024).decode('utf-8')

@@ -33,17 +33,24 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
     global sync_values, clients_ready, requests, server_sync
     
     while True:
-
-        request = json.loads(client_socket.recv(1024).decode('utf-8'))
+        request_json = client_socket.recv(1024).decode('utf-8')
+        request = json.loads(request_json)
 
         # if clients request is to start the game
         if request['req'] == 'start':
             with clients_lock:
                 clients_ready[paddle] = True
-                if clients_ready["left"] == True & clients_ready["right"] == True:
-                    ret: Dict[str, bool] = {'return': True}
+                if len(clients_ready) == 2:
+                    if clients_ready["left"] == True and clients_ready["right"] == True:
+                        ret: Dict[str, bool] = {'return': True}
+                        client_socket.send(json.dumps(ret).encode('utf-8'))
+                    else:
+                        ret: Dict[str, bool] = {'return': False}
+                        client_socket.send(json.dumps(ret).encode('utf-8'))
+                else:
+                    ret: Dict[str, bool] = {'return': False}
                     client_socket.send(json.dumps(ret).encode('utf-8'))
-            
+                
         # if clients request is send data to server 
         elif request['req'] == 'send':
             # get data transmitted
