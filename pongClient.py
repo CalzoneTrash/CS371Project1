@@ -59,7 +59,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
     lScore = 0
     rScore = 0
-    sync = 1
+    sync = 0
 
     #MAIN WHILE LOOP FOR CLIENT TO PLAY GAME
     while True:
@@ -88,14 +88,12 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Feel free to change when the score is updated to suit your needs/requirements
 
         send_data = {
-            "ball": {
-                "x": ball.rect.x,
-                "y": ball.rect.y
-            },
-            "playerPaddle_y": playerPaddleObj.rect.y,
-            "lScore": lScore,
-            "rScore": rScore,
-            "sync": sync
+            'ball_x': ball.rect.x,
+            'ball_y': ball.rect.y,
+            'playerPaddle_y': playerPaddleObj.rect.y,
+            'lScore': lScore,
+            'rScore': rScore,
+            'sync': sync
         }
 
         # Convert JSON object and send it to the server
@@ -179,14 +177,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             give_request = {'req': 'give'}
             client.send(json.dumps(give_request).encode('utf-8'))
 
-            give_response = json.loads(client.recv(1024).decode('utf-8'))
-    
-            # Parse the data as JSON
-            data_json = json.loads(give_response)
-        except BlockingIOError:
-            # Non-blocking mode exception handling (if set to non-blocking)
-            # print(f"NON-BLOCK ERROR FOR {client}\n") # TESTING
-            pass
+            data_json = json.loads(client.recv(1024).decode('utf-8'))
         except ConnectionResetError:
             # Handle disconnection from server, perhaps try to reconnect or quit
             print("Disconnected from server")
@@ -200,8 +191,8 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
     
         # Extract data from JSON object for leftplayer case
         try:
-            ball_x = data_json['ball']['x']
-            ball_y = data_json['ball']['y']
+            ball_x = data_json['ball_x']
+            ball_y = data_json['ball_y']
             player_y = data_json['playerPaddle_y']
             lScore = data_json['lScore']
             rScore = data_json['rScore']
@@ -248,11 +239,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
 
             #receive response from server
             try:
-                rec_init_data = client.recv(1024).decode('utf-8')
-                json_init_data = json.loads(rec_init_data)
-            except BlockingIOError:
-               # Non-blocking mode exception handling (if set to non-blocking)
-               pass
+                json_init_data = json.loads(client.recv(1024).decode('utf-8'))
             except ConnectionResetError:
                # Handle disconnection from server, perhaps try to reconnect or quit
                print("Disconnected from server")
@@ -264,11 +251,10 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
             
             # if game is ready to start
             if json_init_data['return'] == True:
-                initial_data = client.recv(1024).decode('utf-8')
-                json_initial_data = json.loads(initial_data)
-                screenWidth = json_initial_data["screen_width"]
-                screenHeight = json_initial_data["screen_height"]
-                left_right_paddle = json_initial_data["paddle"]
+                json_initial_data = json.loads(client.recv(1024).decode('utf-8'))
+                screenWidth = json_initial_data['screen_width']
+                screenHeight = json_initial_data['screen_height']
+                left_right_paddle = json_initial_data['paddle']
                 print(f"FOR TESTING -- WIDTH IS {screenWidth}, HEIGHT IS {screenHeight}, PADDLE IS {left_right_paddle}\n") #TESTING !!!
                 # Close this window and start the game with the info passed to you from the server
                 app.withdraw()     # Hides the window (we'll kill it later)
@@ -277,7 +263,6 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
                 break
             else: # other client is not ready/initialized
                 continue
-        
     except Exception as e:
         # Handle exceptions, such as connection failure
         errorLabel.config(text=f"Failed to connect to server: {e} | IP: {ip}, Port: {port}")

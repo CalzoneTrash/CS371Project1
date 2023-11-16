@@ -18,21 +18,29 @@ from typing import Dict, Tuple
 # I suggest you use the sync variable in pongClient.py to determine how out of sync your two
 # clients are and take actions to resync the games
 
+#SCREEN CONSTANTS
 SCREEN_WIDTH = 640
 SCREEN_HEIGHT = 480
 
 # Global variables
-server_sync: int = 0
+server_sync: int = -1
+server_lScore: int = 0
+server_rScore: int = 0
+server_ball_x: int = 0
+server_ball_y: int = 0
+
 clients_ready: Dict[Tuple[str, int], bool] = {}
 sync_values: Dict[str, int] = {} # dict to hold current sync value for each client
-requests: Dict[str, int] = {} #dict to hold request types
-clients_lock = threading.Lock()
-sync_lock = threading.Lock()
+clients_lock = threading.Lock() # lock for clients_ready
+sync_lock = threading.Lock() # lock for sync data
 
 def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle: str) -> None:
     global sync_values, clients_ready, requests, server_sync
-    
+    requests: Dict[str, int] = {} #dict to hold request types
+    server_currPaddle: int = 255
+    #MAIN LOOP
     while True:
+        # receive request data (start, send or give)
         request_json = client_socket.recv(1024).decode('utf-8')
         request = json.loads(request_json)
 
@@ -41,13 +49,14 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
             with clients_lock:
                 clients_ready[paddle] = True
                 if len(clients_ready) == 2:
-                    if clients_ready["left"] == True and clients_ready["right"] == True:
+                    print(f"CLIENTS READY? LEFT: {clients_ready['left']} RIGHT:{clients_ready['left']} \n")
+                    if clients_ready['left'] == True and clients_ready['right'] == True:
                         ret: Dict[str, bool] = {'return': True}
                         client_socket.send(json.dumps(ret).encode('utf-8'))
                         init_data = {
-                                    "screen_width": SCREEN_WIDTH,
-                                    "screen_height": SCREEN_HEIGHT,
-                                    "paddle": paddle
+                                    'screen_width': SCREEN_WIDTH,
+                                    'screen_height': SCREEN_HEIGHT,
+                                    'paddle': paddle
                                     }
                         client_socket.send(json.dumps(init_data).encode('utf-8'))
                     else:
@@ -69,20 +78,18 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
                     server_lScore = data_json['lScore']
                     server_rScore = data_json['rScore']
                     server_currPaddle = data_json['playerPaddle_y']
-                    server_ball_x = data_json['ball']['x']
-                    server_ball_y = data_json['ball']['y']
+                    server_ball_x = data_json['ball_x']
+                    server_ball_y = data_json['ball_y']
 
         # if clients request is for server to give server data back               
         elif request['req'] == 'give':
             response = {
-                        "ball": {
-                            "x": server_ball_x,
-                            "y": server_ball_y
-                        },
-                        "playerPaddle_y": server_currPaddle,
-                        "lScore": server_lScore,
-                        "rScore": server_rScore,
-                        "sync": server_sync
+                        'ball_x': server_ball_x,
+                        'ball_y': server_ball_y,
+                        'playerPaddle_y': server_currPaddle,
+                        'lScore': server_lScore,
+                        'rScore': server_rScore,
+                        'sync': server_sync
                     }
             client_socket.send(json.dumps(response).encode('utf-8'))
             
@@ -104,8 +111,8 @@ def main() -> None:
 
     
     try:
-        client_handler1 = threading.Thread(target=handle_client, args=(client_socket1, addr1, "left"))
-        client_handler2 = threading.Thread(target=handle_client, args=(client_socket2, addr2, "right"))
+        client_handler1 = threading.Thread(target=handle_client, args=(client_socket1, addr1, 'left'))
+        client_handler2 = threading.Thread(target=handle_client, args=(client_socket2, addr2, 'right'))
         client_handler1.start()
         client_handler2.start()
         print("[*] Both players connected. Game started!")
