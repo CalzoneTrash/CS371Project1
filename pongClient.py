@@ -18,8 +18,6 @@ from assets.code.helperCode import *
 # where you should add to the code are marked.  Feel free to change any part of this project
 # to suit your needs.
 def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.socket) -> None:
-    # global send_data
-    # print(f"WE MADE IT TO PLAY GAME FOR {client}\n") #TESTING
     # Pygame inits
     pygame.mixer.pre_init(44100, -16, 2, 2048)
     pygame.init()
@@ -63,7 +61,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
     #MAIN WHILE LOOP FOR CLIENT TO PLAY GAME
     while True:
-        # print(f"WE MADE IT TO THE LOOP FOR {client}\n") # TESTING
         # Wiping the screen
         screen.fill((0,0,0))
 
@@ -86,7 +83,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Your code here to send an update to the server on your paddle's information,
         # where the ball is and the current score.
         # Feel free to change when the score is updated to suit your needs/requirements
-        ball.updatePos() # DELETE??
+        #ball.updatePos() # DELETE??
         send_data = {
             'ball_x': ball.rect.x,
             'ball_y': ball.rect.y,
@@ -95,7 +92,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             'rScore': rScore,
             'sync': sync
         }
-        print(f"Data sent is ball_x:{ball.rect.x} ball_y:{ball.rect.y} playerPaddle:{playerPaddleObj.rect.y} lScore:{lScore} rScore:{rScore} SYNC:{sync} \n") # TESTING
         # Convert JSON object and send it to the server
         send_request = {'req': 'send', 'data': send_data}
         client.send(json.dumps(send_request).encode('utf-8'))
@@ -162,10 +158,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         pygame.display.update()
         clock.tick(60)
 
-        # This number should be synchronized between you and your opponent.  If your number is larger
-        # then you are ahead of them in time, if theirs is larger, they are ahead of you, and you need to
-        # catch up (use their info)
-        sync += 1
         # =========================================================================================
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
@@ -204,6 +196,10 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             print(f"There was a problem with the KEYS of data_JSON for \n")
             pass
 
+        # This number should be synchronized between you and your opponent.  If your number is larger
+        # then you are ahead of them in time, if theirs is larger, they are ahead of you, and you need to
+        # catch up (use their info)
+        sync += 1
         
         # Update the display and tick the clock
         pygame.display.flip()
@@ -224,7 +220,6 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     # port          A string holding the port the server is using
     # errorLabel    A tk label widget, modify it's text to display messages to the user (example below)
     # app           The tk window object, needed to kill the window
-    # print(f"WE MADE IT TO JOIN SERVER \n") #TESTING
 
     # Create a socket and connect to the server
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -256,7 +251,6 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
                 screenWidth = json_initial_data['screen_width']
                 screenHeight = json_initial_data['screen_height']
                 left_right_paddle = json_initial_data['paddle']
-                print(f"FOR TESTING -- WIDTH IS {screenWidth}, HEIGHT IS {screenHeight}, PADDLE IS {left_right_paddle}\n") #TESTING !!!
                 # Close this window and start the game with the info passed to you from the server
                 app.withdraw()     # Hides the window (we'll kill it later)
                 playGame(screenWidth, screenHeight, left_right_paddle, client)  # User will be either left or right paddle
