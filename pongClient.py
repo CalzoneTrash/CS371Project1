@@ -63,7 +63,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
     #MAIN WHILE LOOP FOR CLIENT TO PLAY GAME
     while True:
-        # print(f"WE MADE IT TO THE LOOP FOR {client}\n") # TESTING
+        print(f"WE MADE IT TO THE LOOP FOR {client}\n") # TESTING
         # Wiping the screen
         screen.fill((0,0,0))
 
@@ -86,35 +86,21 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Your code here to send an update to the server on your paddle's information,
         # where the ball is and the current score.
         # Feel free to change when the score is updated to suit your needs/requirements
-        if playerPaddle == "left":
-            send_data = {
-                "ball": {
-                    "x": ball.rect.x,
-                    "y": ball.rect.y
-                },
-                "leftPaddle_y": playerPaddleObj.rect.y,
-                "rightPaddle_y": opponentPaddleObj.rect.y,
-                "lScore": lScore,
-                "rScore": rScore,
-                "sync": sync
-            }
-        elif playerPaddle == "right":
-            send_data = {
-                "ball": {
-                    "x": ball.rect.x,
-                    "y": ball.rect.y
-                },
-                "leftPaddle_y": opponentPaddleObj.rect.y,
-                "rightPaddle_y": playerPaddleObj.rect.y,
-                "lScore": lScore,
-                "rScore": rScore,
-                "sync": sync
-            }
+
+        send_data = {
+            "ball": {
+                "x": ball.rect.x,
+                "y": ball.rect.y
+            },
+            "playerPaddle_y": playerPaddleObj.rect.y,
+            "lScore": lScore,
+            "rScore": rScore,
+            "sync": sync
+        }
 
         # Convert JSON object and send it to the server
-        # print(f"{ball_x} @ {ball_y} @ {opponentPaddleObj.rect.y} @ {playerPaddleObj.rect.y} @ {lScore} @ {rScore} @ {sync}") # TESTING!
-        data_update = json.dumps(send_data)
-        client.send(data_update.encode('utf-8'))
+        send_request = {'req': 'send', 'data': send_data}
+        client.send(json.dumps(send_request).encode('utf-8'))
         # =========================================================================================
 
         # Update the player paddle and opponent paddle's location on the screen
@@ -187,12 +173,16 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
 
-        # print(f"WE MADE IT TO Receive data from server FOR {client}\n") # TESTING
-        # Receive data from server
+        print(f"WE MADE IT TO Receive data from server FOR {client}\n") # TESTING
+        # Send/Receive "GIVE" data to/from server
         try:
-            received_data = client.recv(1024).decode('utf-8')
+            give_request = {'req': 'give'}
+            client.send(json.dumps(give_request).encode('utf-8'))
+
+            give_response = json.loads(client.recv(1024).decode('utf-8'))
+    
             # Parse the data as JSON
-            data_json = json.loads(received_data)
+            data_json = json.loads(give_response)
         except BlockingIOError:
             # Non-blocking mode exception handling (if set to non-blocking)
             # print(f"NON-BLOCK ERROR FOR {client}\n") # TESTING
@@ -207,36 +197,21 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             pass
 
         # for leftplayer case
-        if playerPaddle == "left": 
-            # Extract data from JSON object for leftplayer case
-            try:
-                ball_x = data_json['ball']['x']
-                ball_y = data_json['ball']['y']
-                opponent_y = data_json['rightPaddle']
-                lScore = data_json['lScore']
-                rScore = data_json['rScore']
-                ball.rect.x, ball.rect.y = ball_x, ball_y
-                opponentPaddleObj.rect.y = opponent_y
-            except KeyError:
-                # Handle case where received data does not contain expected keys for leftplayer case
-                print(f"There was a problem with the KEYS of data_JSON for \n")
-                pass
-        # for right player case
-        elif playerPaddle == "right":
-            # Extract data from JSON object for right player case
-            try:
-                ball_x = data_json['ball']['x']
-                ball_y = data_json['ball']['y']
-                opponent_y = data_json['leftPaddle']
-                lScore = data_json['lScore']
-                rScore = data_json['rScore']
+    
+        # Extract data from JSON object for leftplayer case
+        try:
+            ball_x = data_json['ball']['x']
+            ball_y = data_json['ball']['y']
+            player_y = data_json['playerPaddle_y']
+            lScore = data_json['lScore']
+            rScore = data_json['rScore']
+            ball.rect.x, ball.rect.y = ball_x, ball_y
+            playerPaddleObj.rect.y = player_y
+        except KeyError:
+            # Handle case where received data does not contain expected keys for leftplayer case
+            print(f"There was a problem with the KEYS of data_JSON for \n")
+            pass
 
-                ball.rect.x, ball.rect.y = ball_x, ball_y
-                opponentPaddleObj.rect.y = opponent_y
-            except KeyError:
-                # Handle case where received data does not contain expected keys for right player case
-                print(f"There was a problem with the KEYS of data_JSON for\n")
-                pass
         
         # Update the display and tick the clock
         pygame.display.flip()
@@ -266,12 +241,25 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
     try:
         client.connect((ip, int(port)))
 
-        rec_init_data = client.recv(1024).decode('utf-8')
-        json_init_data = json.loads(rec_init_data)
+        while True:
+            # Convert JSON object and send it to the server
+            send_request = {'req': 'start'}
+            client.send(json.dumps(send_request).encode('utf-8'))
 
-        screenWidth = json_init_data["screen_width"]
-        screenHeight = json_init_data["screen_height"]
-        left_right_paddle = json_init_data["paddle"]
+            #receive response from server
+            rec_init_data = client.recv(1024).decode('utf-8')
+            json_init_data = json.loads(rec_init_data)
+
+            # if game is ready to start
+            if json_init_data['return'] == True:
+                initial_data = client.recv(1024).decode('utf-8')
+                json_initial_data = json.loads(initial_data)
+                screenWidth = json_initial_data["screen_width"]
+                screenHeight = json_initial_data["screen_height"]
+                left_right_paddle = json_initial_data["paddle"]
+                break
+            else: # other client is not ready/initialized
+                continue
 
         # Close this window and start the game with the info passed to you from the server
         app.withdraw()     # Hides the window (we'll kill it later)
