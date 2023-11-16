@@ -165,7 +165,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             give_request = {'req': 'give'}
             client.send(json.dumps(give_request).encode('utf-8'))
 
-            data_json = json.loads(client.recv(1024).decode('utf-8'))
+            data_json = json.loads(client.recv(2048).decode('utf-8'))
         except ConnectionResetError:
             # Handle disconnection from server, perhaps try to reconnect or quit
             print("Disconnected from server")
@@ -235,7 +235,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
 
             #receive response from server
             try:
-                json_init_data = json.loads(client.recv(1024).decode('utf-8'))
+                json_init_data = json.loads(client.recv(2048).decode('utf-8'))
             except ConnectionResetError:
                # Handle disconnection from server, perhaps try to reconnect or quit
                print("Disconnected from server")
@@ -247,7 +247,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
             
             # if game is ready to start
             if json_init_data['return'] == True:
-                json_initial_data = json.loads(client.recv(1024).decode('utf-8'))
+                json_initial_data = json.loads(client.recv(2048).decode('utf-8'))
                 screenWidth = json_initial_data['screen_width']
                 screenHeight = json_initial_data['screen_height']
                 left_right_paddle = json_initial_data['paddle']

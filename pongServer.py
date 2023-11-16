@@ -42,7 +42,7 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
     #MAIN LOOP
     while True:
         # receive request data (start, send or give)
-        request = json.loads(client_socket.recv(1024).decode('utf-8'))
+        request = json.loads(client_socket.recv(2048).decode('utf-8'))
 
         # if clients request is to start the game
         if request['req'] == 'start':
