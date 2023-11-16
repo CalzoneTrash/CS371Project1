@@ -8,7 +8,6 @@
 import json
 import socket
 import threading
-import tkinter as tk
 from assets.code.helperCode import *
 from typing import Dict, Tuple
 
@@ -60,7 +59,6 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
         continue
     #########################Main While Loop#############################################################################
     while True:
-
         #print(f"WE MADE IT TO HANDLE CLIENT LOOP FOR {address} \n") #TESTING
         try:
             data = client_socket.recv(1024).decode('utf-8')
@@ -105,10 +103,11 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int]) -> Non
                         "rScore": rScore,
                         "sync": sync
                     }
+                    json_message = json.dumps(new_message)
                     with clients_lock:
                         for client in clients.values():
                             # print(f"clients contains: {client}\n") # TESTING!
-                            client.send(new_message.encode('utf-8'))
+                            client.send(json_message.encode('utf-8'))
         # End loop if client disconnects
         if len(clients) < 2:
             break
