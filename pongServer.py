@@ -44,6 +44,12 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
                     if clients_ready["left"] == True and clients_ready["right"] == True:
                         ret: Dict[str, bool] = {'return': True}
                         client_socket.send(json.dumps(ret).encode('utf-8'))
+                        init_data = {
+                                    "screen_width": SCREEN_WIDTH,
+                                    "screen_height": SCREEN_HEIGHT,
+                                    "paddle": paddle
+                                    }
+                        client_socket.send(json.dumps(init_data).encode('utf-8'))
                     else:
                         ret: Dict[str, bool] = {'return': False}
                         client_socket.send(json.dumps(ret).encode('utf-8'))
@@ -57,7 +63,6 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
             data_json = request['data']
 
             # Extract data from JSON if client sync is greater than servers
-            
             with sync_lock:
                 if data_json['sync'] > server_sync:   
                     server_sync = data_json['sync']

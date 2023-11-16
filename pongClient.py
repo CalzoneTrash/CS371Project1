@@ -269,14 +269,15 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
                 screenWidth = json_initial_data["screen_width"]
                 screenHeight = json_initial_data["screen_height"]
                 left_right_paddle = json_initial_data["paddle"]
+                print(f"FOR TESTING -- WIDTH IS {screenWidth}, HEIGHT IS {screenHeight}, PADDLE IS {left_right_paddle}\n") #TESTING !!!
+                # Close this window and start the game with the info passed to you from the server
+                app.withdraw()     # Hides the window (we'll kill it later)
+                playGame(screenWidth, screenHeight, left_right_paddle, client)  # User will be either left or right paddle
+                app.quit()         # Kills the window
                 break
             else: # other client is not ready/initialized
                 continue
-
-        # Close this window and start the game with the info passed to you from the server
-        app.withdraw()     # Hides the window (we'll kill it later)
-        playGame(screenWidth, screenHeight, left_right_paddle, client)  # User will be either left or right paddle
-        app.quit()         # Kills the window
+        
     except Exception as e:
         # Handle exceptions, such as connection failure
         errorLabel.config(text=f"Failed to connect to server: {e} | IP: {ip}, Port: {port}")
