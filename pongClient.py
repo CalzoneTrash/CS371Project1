@@ -63,7 +63,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
 
     #MAIN WHILE LOOP FOR CLIENT TO PLAY GAME
     while True:
-        print(f"WE MADE IT TO THE LOOP FOR {client}\n") # TESTING
+        # print(f"WE MADE IT TO THE LOOP FOR {client}\n") # TESTING
         # Wiping the screen
         screen.fill((0,0,0))
 
@@ -171,7 +171,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # Send your server update here at the end of the game loop to sync your game with your
         # opponent's game
 
-        print(f"WE MADE IT TO Receive data from server FOR {client}\n") # TESTING
+        # print(f"WE MADE IT TO Receive data from server FOR {client}\n") # TESTING
         # Send/Receive "GIVE" data to/from server
         try:
             give_request = {'req': 'give'}
@@ -193,11 +193,17 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         try:
             ball_x = data_json['ball_x']
             ball_y = data_json['ball_y']
-            player_y = data_json['playerPaddle_y']
+            left_player_y = data_json['left_paddle_y']
+            right_player_y = data_json['right_paddle_y']
             lScore = data_json['lScore']
             rScore = data_json['rScore']
             ball.rect.x, ball.rect.y = ball_x, ball_y
-            playerPaddleObj.rect.y = player_y
+            if playerPaddle == "left":
+                playerPaddleObj.rect.y = left_player_y
+                opponentPaddleObj.rect.y = right_player_y
+            elif playerPaddle == "right":
+                playerPaddleObj.rect.y = right_player_y
+                opponentPaddleObj.rect.y = left_player_y
         except KeyError:
             # Handle case where received data does not contain expected keys for leftplayer case
             print(f"There was a problem with the KEYS of data_JSON for \n")

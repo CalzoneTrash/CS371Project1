@@ -28,22 +28,22 @@ server_lScore: int = 0
 server_rScore: int = 0
 server_ball_x: int = 0
 server_ball_y: int = 0
-
+server_left_paddle: int = 0
+server_right_paddle: int = 0
+requests: Dict[str, int] = {} #dict to hold request types
 clients_ready: Dict[Tuple[str, int], bool] = {}
 sync_values: Dict[str, int] = {} # dict to hold current sync value for each client
 clients_lock = threading.Lock() # lock for clients_ready
 sync_lock = threading.Lock() # lock for sync data
 
 def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle: str) -> None:
-    global sync_values, clients_ready, requests, server_sync
-    requests: Dict[str, int] = {} #dict to hold request types
+    global sync_values, clients_ready, requests, server_sync, server_lScore, server_rScore, server_ball_x, server_ball_y, server_left_paddle, server_right_paddle
     server_currPaddle: int = 255
     #MAIN LOOP
     while True:
         # receive request data (start, send or give)
-        request_json = client_socket.recv(1024).decode('utf-8')
-        request = json.loads(request_json)
-
+        request = json.loads(client_socket.recv(1024).decode('utf-8'))
+        print(f"request was {request['req']}\n")
         # if clients request is to start the game
         if request['req'] == 'start':
             with clients_lock:
@@ -54,10 +54,10 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
                         ret: Dict[str, bool] = {'return': True}
                         client_socket.send(json.dumps(ret).encode('utf-8'))
                         init_data = {
-                                    'screen_width': SCREEN_WIDTH,
-                                    'screen_height': SCREEN_HEIGHT,
-                                    'paddle': paddle
-                                    }
+                            'screen_width': SCREEN_WIDTH,
+                            'screen_height': SCREEN_HEIGHT,
+                            'paddle': paddle
+                            }
                         client_socket.send(json.dumps(init_data).encode('utf-8'))
                     else:
                         ret: Dict[str, bool] = {'return': False}
@@ -71,22 +71,27 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
             # get data transmitted
             data_json = request['data']
 
-            # Extract data from JSON if client sync is greater than servers
+            # Extract data from JSON, update if client sync is greater than servers
             with sync_lock:
                 if data_json['sync'] > server_sync:   
                     server_sync = data_json['sync']
                     server_lScore = data_json['lScore']
                     server_rScore = data_json['rScore']
-                    server_currPaddle = data_json['playerPaddle_y']
                     server_ball_x = data_json['ball_x']
                     server_ball_y = data_json['ball_y']
-
+                    server_currPaddle = data_json['playerPaddle_y']
+                    if paddle == 'left':
+                        server_left_paddle = server_currPaddle
+                    elif paddle == 'right':
+                        server_right_paddle = server_currPaddle
+                    
         # if clients request is for server to give server data back               
         elif request['req'] == 'give':
             response = {
                         'ball_x': server_ball_x,
                         'ball_y': server_ball_y,
-                        'playerPaddle_y': server_currPaddle,
+                        'left_paddle_y': server_left_paddle,
+                        'right_paddle_y': server_right_paddle,
                         'lScore': server_lScore,
                         'rScore': server_rScore,
                         'sync': server_sync
