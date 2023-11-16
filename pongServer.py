@@ -26,8 +26,8 @@ SCREEN_HEIGHT = 480
 server_sync: int = -1
 server_lScore: int = 0
 server_rScore: int = 0
-server_ball_x: int = 0
-server_ball_y: int = 0
+server_ball_x: int = 55
+server_ball_y: int = 55
 server_left_paddle: int = 0
 server_right_paddle: int = 0
 
@@ -44,7 +44,7 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
     while True:
         # receive request data (start, send or give)
         request = json.loads(client_socket.recv(1024).decode('utf-8'))
-        #print(f"request was {request['req']}\n") #TESTING
+
         # if clients request is to start the game
         if request['req'] == 'start':
             with clients_lock:
@@ -88,16 +88,17 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
                     
         # if clients request is for server to give server data back               
         elif request['req'] == 'give':
-            print(f"GIVE DATA IS ball_x:{server_ball_x} ball_y:{server_ball_y} left_paddle_y:{server_left_paddle} right_paddle_y:{server_right_paddle} lScore:{server_lScore} rScore:{server_rScore} sync:{server_sync} \n")
-            response = {
-                        'ball_x': server_ball_x,
-                        'ball_y': server_ball_y,
-                        'left_paddle_y': server_left_paddle,
-                        'right_paddle_y': server_right_paddle,
-                        'lScore': server_lScore,
-                        'rScore': server_rScore,
-                        'sync': server_sync
-                    }
+            with sync_lock:
+                print(f"GIVE DATA IS ball_x:{server_ball_x} ball_y:{server_ball_y} left_paddle_y:{server_left_paddle} right_paddle_y:{server_right_paddle} lScore:{server_lScore} rScore:{server_rScore} sync:{server_sync} \n")
+                response = {
+                            'ball_x': server_ball_x,
+                            'ball_y': server_ball_y,
+                            'left_paddle_y': server_left_paddle,
+                            'right_paddle_y': server_right_paddle,
+                            'lScore': server_lScore,
+                            'rScore': server_rScore,
+                            'sync': server_sync
+                        }
             client_socket.send(json.dumps(response).encode('utf-8'))
             
 
