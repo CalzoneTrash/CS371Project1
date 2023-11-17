@@ -114,7 +114,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         else:
 
             # ==== Ball Logic =====================================================================
-            ball.updatePos()
+            #ball.updatePos()
 
             # If the ball makes it past the edge of the screen, update score, etc.
             if ball.rect.x > screenWidth:
@@ -165,14 +165,14 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             give_request = {'req': 'give'}
             client.send(json.dumps(give_request).encode('utf-8'))
 
-            data_json = json.loads(client.recv(2048).decode('utf-8'))
+            data_json = json.loads(client.recv(4096).decode('utf-8'))
         except ConnectionResetError:
             # Handle disconnection from server, perhaps try to reconnect or quit
             print("Disconnected from server")
             break
         except json.JSONDecodeError:
             # Handle invalid JSON data
-            print("JSON Error")
+            print("JSON Error give")
             #continue
     
         # Extract data from JSON object and update variables
@@ -190,6 +190,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
                 opponentPaddleObj.rect.y = right_player_y
             elif playerPaddle == "right": # right case
                 opponentPaddleObj.rect.y = left_player_y
+            ball.updatePos()
         except KeyError:
             # Handle case where received data does not contain expected keys
             print(f"There was a problem with the KEYS of data_JSON for \n")
@@ -199,7 +200,6 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         # then you are ahead of them in time, if theirs is larger, they are ahead of you, and you need to
         # catch up (use their info)
         sync += 1
-        ball.updatePos()
 
         # Update the display and tick the clock
         pygame.display.flip()
@@ -235,7 +235,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
 
             #receive response from server
             try:
-                json_init_data = json.loads(client.recv(2048).decode('utf-8'))
+                json_init_data = json.loads(client.recv(4096).decode('utf-8'))
             except ConnectionResetError:
                # Handle disconnection from server, perhaps try to reconnect or quit
                print("Disconnected from server")
@@ -247,7 +247,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
             
             # if game is ready to start
             if json_init_data['return'] == True:
-                json_initial_data = json.loads(client.recv(2048).decode('utf-8'))
+                json_initial_data = json.loads(client.recv(4096).decode('utf-8'))
                 screenWidth = json_initial_data['screen_width']
                 screenHeight = json_initial_data['screen_height']
                 left_right_paddle = json_initial_data['paddle']

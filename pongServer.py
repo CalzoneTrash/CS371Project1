@@ -42,7 +42,7 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
     #MAIN LOOP
     while True:
         # receive request data (start, send or give)
-        request = json.loads(client_socket.recv(2048).decode('utf-8'))
+        request = json.loads(client_socket.recv(4096).decode('utf-8'))
 
         # if clients request is send data to server 
         if request['req'] == 'send':
@@ -75,6 +75,7 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
                             'rScore': server_rScore,
                             'sync': server_sync
                         }
+                print(f"GIVE DATA IS ball_x:{server_ball_x} ball_y:{server_ball_y} left_paddle_y:{server_left_paddle} right_paddle_y:{server_right_paddle} lScore:{server_lScore} rScore:{server_rScore} sync:{server_sync} \n")
             client_socket.send(json.dumps(response).encode('utf-8'))
         # if clients request is to start the game
         elif request['req'] == 'start':
