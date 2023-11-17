@@ -94,6 +94,53 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         send_request = {'req': 'send', 'data': send_data}
         client.send(json.dumps(send_request).encode('utf-8'))
         # =========================================================================================
+        # Send your server update here at the end of the game loop to sync your game with your
+        # opponent's game
+
+        # Send/Receive "GIVE" data to/from server
+        try:
+            give_request = {'req': 'give'}
+            client.send(json.dumps(give_request).encode('utf-8'))
+            try:
+                data_json = json.loads(client.recv(1024).decode('utf-8'))
+            except json.JSONDecodeError:
+                print(f"error getting json give data\n")
+                give_request = {'req': 'give'}
+                data_json = json.loads(client.recv(1024).decode('utf-8'))
+        except ConnectionResetError:
+            # Handle disconnection from server, perhaps try to reconnect or quit
+            print("Disconnected from server")
+            break
+        except json.JSONDecodeError:
+            give_request = {'req': 'give'}
+            client.send(json.dumps(give_request).encode('utf-8'))
+            # Handle invalid JSON data
+            print("JSON Error sending give request")
+            pass
+    
+        # Extract data from JSON object and update variables
+        try:
+            sync = data_json['sync']
+            left_player_y = data_json['left_paddle_y']
+            right_player_y = data_json['right_paddle_y']
+            if lScore < data_json['lScore']:
+                lScore = data_json['lScore']
+            if rScore < data_json['rScore']:
+                rScore = data_json['rScore']
+            ball.rect.x = data_json['ball_x']
+            ball.rect.y =  data_json['ball_y']
+            if playerPaddle == "left": # left case
+                opponentPaddleObj.rect.y = right_player_y
+            elif playerPaddle == "right": # right case
+                opponentPaddleObj.rect.y = left_player_y
+            
+            ball.updatePos()
+        except KeyError:
+            # Handle case where received data does not contain expected keys
+            print(f"There was a problem with the KEYS of data_JSON for \n")
+            pass
+
+        # =========================================================================================
 
         # Update the player paddle and opponent paddle's location on the screen
         for paddle in [playerPaddleObj, opponentPaddleObj]:
@@ -156,47 +203,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         pygame.display.update()
         clock.tick(60)
 
-        # =========================================================================================
-        # Send your server update here at the end of the game loop to sync your game with your
-        # opponent's game
-
-        # Send/Receive "GIVE" data to/from server
-        try:
-            give_request = {'req': 'give'}
-            client.send(json.dumps(give_request).encode('utf-8'))
-
-            data_json = json.loads(client.recv(4096).decode('utf-8'))
-        except ConnectionResetError:
-            # Handle disconnection from server, perhaps try to reconnect or quit
-            print("Disconnected from server")
-            break
-        except json.JSONDecodeError:
-            # Handle invalid JSON data
-            print("JSON Error give")
-            #continue
-    
-        # Extract data from JSON object and update variables
-        try:
-            sync = data_json['sync']
-            left_player_y = data_json['left_paddle_y']
-            right_player_y = data_json['right_paddle_y']
-            if lScore < data_json['lScore']:
-                lScore = data_json['lScore']
-            if rScore < data_json['rScore']:
-                rScore = data_json['rScore']
-            ball.rect.x = data_json['ball_x']
-            ball.rect.y =  data_json['ball_y']
-            if playerPaddle == "left": # left case
-                opponentPaddleObj.rect.y = right_player_y
-            elif playerPaddle == "right": # right case
-                opponentPaddleObj.rect.y = left_player_y
-            
-            ball.updatePos()
-        except KeyError:
-            # Handle case where received data does not contain expected keys
-            print(f"There was a problem with the KEYS of data_JSON for \n")
-            pass
-
+        
         # This number should be synchronized between you and your opponent.  If your number is larger
         # then you are ahead of them in time, if theirs is larger, they are ahead of you, and you need to
         # catch up (use their info)
