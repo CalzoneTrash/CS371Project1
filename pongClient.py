@@ -102,11 +102,11 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             give_request = {'req': 'give'}
             client.send(json.dumps(give_request).encode('utf-8'))
             try:
-                data_json = json.loads(client.recv(1024).decode('utf-8'))
+                data_json = json.loads(client.recv(2048).decode('utf-8'))
             except json.JSONDecodeError:
                 print(f"error getting json give data\n")
                 give_request = {'req': 'give'}
-                data_json = json.loads(client.recv(1024).decode('utf-8'))
+                data_json = json.loads(client.recv(2048).decode('utf-8'))
         except ConnectionResetError:
             # Handle disconnection from server, perhaps try to reconnect or quit
             print("Disconnected from server")
@@ -114,32 +114,39 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         except json.JSONDecodeError:
             give_request = {'req': 'give'}
             client.send(json.dumps(give_request).encode('utf-8'))
+            try:
+                data_json = json.loads(client.recv(2048).decode('utf-8'))
+            except json.JSONDecodeError:
+                print(f"error getting json give data\n")
+                give_request = {'req': 'give'}
+                data_json = json.loads(client.recv(2048).decode('utf-8'))
             # Handle invalid JSON data
             print("JSON Error sending give request")
             pass
     
         # Extract data from JSON object and update variables
         try:
-            sync = data_json['sync']
-            left_player_y = data_json['left_paddle_y']
-            right_player_y = data_json['right_paddle_y']
-            if lScore < data_json['lScore']:
-                lScore = data_json['lScore']
-            if rScore < data_json['rScore']:
-                rScore = data_json['rScore']
-            ball.rect.x = data_json['ball_x']
-            ball.rect.y =  data_json['ball_y']
-            if playerPaddle == "left": # left case
-                opponentPaddleObj.rect.y = right_player_y
-            elif playerPaddle == "right": # right case
-                opponentPaddleObj.rect.y = left_player_y
-            
-            ball.updatePos()
+            if data_json['sync']:
+                sync = data_json['sync']
+                left_player_y = data_json['left_paddle_y']
+                right_player_y = data_json['right_paddle_y']
+                if lScore < data_json['lScore']:
+                    lScore = data_json['lScore']
+                if rScore < data_json['rScore']:
+                    rScore = data_json['rScore']
+                if data_json['ball_x']:
+                    ball.rect.x = data_json['ball_x']
+                if data_json['ball_x']:
+                    ball.rect.y =  data_json['ball_y']
+                if playerPaddle == "left": # left case
+                    opponentPaddleObj.rect.y = right_player_y
+                elif playerPaddle == "right": # right case
+                    opponentPaddleObj.rect.y = left_player_y
         except KeyError:
             # Handle case where received data does not contain expected keys
             print(f"There was a problem with the KEYS of data_JSON for \n")
             pass
-
+        ball.updatePos()
         # =========================================================================================
 
         # Update the player paddle and opponent paddle's location on the screen
@@ -243,7 +250,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
 
             #receive response from server
             try:
-                json_init_data = json.loads(client.recv(4096).decode('utf-8'))
+                json_init_data = json.loads(client.recv(2048).decode('utf-8'))
             except ConnectionResetError:
                # Handle disconnection from server, perhaps try to reconnect or quit
                print("Disconnected from server")
@@ -255,7 +262,7 @@ def joinServer(ip:str, port:str, errorLabel:tk.Label, app:tk.Tk) -> None:
             
             # if game is ready to start
             if json_init_data['return'] == True:
-                json_initial_data = json.loads(client.recv(4096).decode('utf-8'))
+                json_initial_data = json.loads(client.recv(2048).decode('utf-8'))
                 screenWidth = json_initial_data['screen_width']
                 screenHeight = json_initial_data['screen_height']
                 left_right_paddle = json_initial_data['paddle']
