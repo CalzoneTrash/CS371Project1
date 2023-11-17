@@ -65,6 +65,7 @@ def handle_client(client_socket: socket.socket, address: Tuple[str, int], paddle
                     
         # if clients request is for server to give server data back               
         elif request['req'] == 'give':
+            
             response = {
                         'ball_x': server_ball_x,
                         'ball_y': server_ball_y,
@@ -118,6 +119,8 @@ def main() -> None:
         client_handler1.start()
         client_handler2.start()
         print("[*] Both players connected. Game started!")
+        client_handler1.join()
+        client_handler2.join()
     except Exception as e:
         print(f"An error has occured {e}")
 
