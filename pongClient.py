@@ -173,7 +173,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         except json.JSONDecodeError:
             # Handle invalid JSON data
             print("JSON Error give")
-            #continue
+            pass
     
         # Extract data from JSON object and update variables
         try:
