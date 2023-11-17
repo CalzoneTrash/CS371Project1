@@ -1,6 +1,6 @@
 # =================================================================================================
 # Contributing Authors:	    Jacob Alteri, Knox Garland
-# Email Addresses:          jcal240@uky.edu, 
+# Email Addresses:          jcal240@uky.edu, kcga230@uky.edu
 # Date:                     11/16/2023
 # Purpose:                  Server Code
 # =================================================================================================
