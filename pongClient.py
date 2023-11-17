@@ -114,7 +114,7 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
         else:
 
             # ==== Ball Logic =====================================================================
-            #ball.updatePos()
+            ball.updatePos()
 
             # If the ball makes it past the edge of the screen, update score, etc.
             if ball.rect.x > screenWidth:
@@ -180,16 +180,17 @@ def playGame(screenWidth:int, screenHeight:int, playerPaddle:str, client:socket.
             sync = data_json['sync']
             left_player_y = data_json['left_paddle_y']
             right_player_y = data_json['right_paddle_y']
-            #if lScore < data_json['lScore']:
-            lScore = data_json['lScore']
-            #if rScore < data_json['rScore']:
-            rScore = data_json['rScore']
+            if lScore < data_json['lScore']:
+                lScore = data_json['lScore']
+            if rScore < data_json['rScore']:
+                rScore = data_json['rScore']
             ball.rect.x = data_json['ball_x']
             ball.rect.y =  data_json['ball_y']
             if playerPaddle == "left": # left case
                 opponentPaddleObj.rect.y = right_player_y
             elif playerPaddle == "right": # right case
                 opponentPaddleObj.rect.y = left_player_y
+            
             ball.updatePos()
         except KeyError:
             # Handle case where received data does not contain expected keys
