@@ -3,13 +3,13 @@ Contact Info
 
 Group Members & Email Addresses:
 
-    Person 1, person1@uky.edu
-    Person 2, person2@uky.edu
+    Jacob Alteri, jcal240@uky.edu
+    Knox Garland, kcga230@uky.edu
 
 Versioning
 ==========
 
-Github Link: 
+Github Link: https://github.com/CalzoneTrash/CS371Project1
 
 General Info
 ============
